@@ -1,0 +1,63 @@
+# Pseudocode:
+# 1. Import necessary libraries.
+# 2. Set up the API key and base URL.
+# 3. Define a function to fetch traffic data based on user input (start point and destination).
+# 4. Process the API response to extract relevant traffic information.
+# 5. Display the traffic data (current conditions, travel time, incidents).
+# 6. Allow the user to input different locations and repeat the process.
+
+# Implementation:
+
+import requests
+
+def get_traffic_data(api_key, start_point, destination):
+    # Base URL for traffic data
+    base_url = "https://maps.googleapis.com/maps/api/directions/json"
+    
+    # Set up the parameters for the API request
+    params = {
+        "origin": start_point,
+        "destination": destination,
+        "key": api_key,
+        "departure_time": "now"
+    }
+    
+    # Make the API request
+    response = requests.get(base_url, params=params)
+    data = response.json()
+    
+    if "routes" in data and len(data["routes"]) > 0:
+        # Extract relevant information
+        route = data["routes"][0]
+        legs = route["legs"][0]
+        traffic_info = {
+            "start_address": legs["start_address"],
+            "end_address": legs["end_address"],
+            "distance": legs["distance"]["text"],
+            "duration": legs["duration"]["text"],
+            "duration_in_traffic": legs.get("duration_in_traffic", {}).get("text", "N/A"),
+            "traffic_conditions": legs.get("traffic_speed_entry", [])
+        }
+        return traffic_info
+    else:
+        return None
+
+def display_traffic_info(traffic_info):
+    if traffic_info:
+        print(f"Start Address: {traffic_info['start_address']}")
+        print(f"End Address: {traffic_info['end_address']}")
+        print(f"Distance: {traffic_info['distance']}")
+        print(f"Estimated Travel Time: {traffic_info['duration']}")
+        print(f"Travel Time in Traffic: {traffic_info['duration_in_traffic']}")
+        print("Traffic Conditions:")
+        for condition in traffic_info["traffic_conditions"]:
+            print(condition["description"])
+    else:
+        print("No traffic data available for the given route.")
+
+# Example usage:
+api_key = "YOUR_API_KEY"
+start_point = "Kurnool"
+destination = "Hyderabad"
+traffic_info = get_traffic_data(api_key, start_point, destination)
+display_traffic_info(traffic_info)
